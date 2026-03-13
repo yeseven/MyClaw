@@ -44,12 +44,87 @@ function ensureBailianProvider(root) {
   provider.baseUrl = provider.baseUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
   provider.api = provider.api || 'openai-completions';
   provider.apiKey = bailianApiKey;
-  provider.models = [buildTargetModel(modelId)];
+
+  // Add all supported free tier models
+  const supportedModels = [
+    modelId, // Always put the selected primary model first (env override or qwen3-max)
+    'qvq-max-2025-03-25',
+    'qwen-math-turbo',
+    'qwen-coder-turbo-0919',
+    'qwen3-vl-235b-a22b-thinking',
+    'qwen1.5-110b-chat',
+    'qwen-vl-plus-2025-05-07',
+    'qwen2.5-vl-72b-instruct',
+    'qwen2.5-math-7b-instruct',
+    'qwen-plus-2025-07-28',
+    'qwen-vl-plus-latest',
+    'qwen2.5-vl-3b-instruct',
+    'deepseek-r1-distill-qwen-7b',
+    'glm-5',
+    'qwen-max',
+    'qwen2.5-14b-instruct',
+    'qwen-mt-flash',
+    'qwen3-vl-30b-a3b-thinking',
+    'qwen-vl-ocr-latest',
+    'qwen3-32b',
+    'qwen2.5-7b-instruct',
+    'qwen-vl-max-2025-08-13',
+    'deepseek-r1-distill-qwen-32b',
+    'qwen1.5-7b-chat',
+    'qwen-vl-plus',
+    'qwen-long',
+    'qwen-coder-plus-latest',
+    'qwen3.5-35b-a3b',
+    'qwen-max-2025-01-25',
+    'glm-4.5-air',
+    'qwen3-coder-480b-a35b-instruct',
+    'qwen3-coder-plus',
+    'qwen3-vl-8b-thinking',
+    'qwen3.5-flash-2026-02-23',
+    'qwen3-vl-flash-2025-10-15',
+    'qwen3-max-preview',
+    'qwen-vl-ocr-1028',
+    'qwen3-8b',
+    'qwen2.5-14b-instruct-1m',
+    'qwen-plus-0112',
+    'qwen-plus',
+    'qwen-math-plus',
+    'qwen2-vl-72b-instruct',
+    'qwen-turbo',
+    'qwen3-0.6b',
+    'qvq-max',
+    'qwen3-coder-flash',
+    'qwen-vl-plus-2025-08-15',
+    'qwen2.5-coder-14b-instruct',
+    'qwen3-next-80b-a3b-thinking',
+    'qwen-vl-max-latest',
+    'qwen1.5-14b-chat',
+    'qwen3.5-27b',
+    'deepseek-r1',
+    'qvq-plus-latest',
+    'qwen3-vl-flash',
+    'qwen2.5-32b-instruct',
+    'qwen-turbo-latest',
+    'MiniMax-M2.5',
+    'qwen3-max-2025-09-23',
+    'qwen-flash',
+    'kimi-k2.5'
+  ];
+
+  // Deduplicate in case modelId is in the list
+  const uniqueModels = [...new Set(supportedModels)];
+  
+  provider.models = uniqueModels.map(buildTargetModel);
 
   root.agents ??= {};
   root.agents.defaults ??= {};
   root.agents.defaults.model ??= {};
-  root.agents.defaults.model.primary = `bailian/${modelId}`;
+  
+  // 尊重用户在面页上选择的 bailian 模型，如果不以 bailian 开头或者是旧版默认的 qwen-max，则使用环境变量的默认值
+  const currentPrimary = root.agents.defaults.model.primary;
+  if (!currentPrimary || !currentPrimary.startsWith('bailian/') || currentPrimary === 'bailian/qwen-max') {
+    root.agents.defaults.model.primary = `bailian/${modelId}`;
+  }
 }
 
 function ensureFeishuConfig(root) {
@@ -131,10 +206,77 @@ function syncAgentModelsJson() {
   provider.baseUrl = provider.baseUrl || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
   provider.api = provider.api || 'openai-completions';
   provider.apiKey = bailianApiKey;
-  provider.models = [buildTargetModel(modelId)];
+
+  const supportedModels = [
+    modelId,
+    'qvq-max-2025-03-25',
+    'qwen-math-turbo',
+    'qwen-coder-turbo-0919',
+    'qwen3-vl-235b-a22b-thinking',
+    'qwen1.5-110b-chat',
+    'qwen-vl-plus-2025-05-07',
+    'qwen2.5-vl-72b-instruct',
+    'qwen2.5-math-7b-instruct',
+    'qwen-plus-2025-07-28',
+    'qwen-vl-plus-latest',
+    'qwen2.5-vl-3b-instruct',
+    'deepseek-r1-distill-qwen-7b',
+    'glm-5',
+    'qwen-max',
+    'qwen2.5-14b-instruct',
+    'qwen-mt-flash',
+    'qwen3-vl-30b-a3b-thinking',
+    'qwen-vl-ocr-latest',
+    'qwen3-32b',
+    'qwen2.5-7b-instruct',
+    'qwen-vl-max-2025-08-13',
+    'deepseek-r1-distill-qwen-32b',
+    'qwen1.5-7b-chat',
+    'qwen-vl-plus',
+    'qwen-long',
+    'qwen-coder-plus-latest',
+    'qwen3.5-35b-a3b',
+    'qwen-max-2025-01-25',
+    'glm-4.5-air',
+    'qwen3-coder-480b-a35b-instruct',
+    'qwen3-coder-plus',
+    'qwen3-vl-8b-thinking',
+    'qwen3.5-flash-2026-02-23',
+    'qwen3-vl-flash-2025-10-15',
+    'qwen3-max-preview',
+    'qwen-vl-ocr-1028',
+    'qwen3-8b',
+    'qwen2.5-14b-instruct-1m',
+    'qwen-plus-0112',
+    'qwen-plus',
+    'qwen-math-plus',
+    'qwen2-vl-72b-instruct',
+    'qwen-turbo',
+    'qwen3-0.6b',
+    'qvq-max',
+    'qwen3-coder-flash',
+    'qwen-vl-plus-2025-08-15',
+    'qwen2.5-coder-14b-instruct',
+    'qwen3-next-80b-a3b-thinking',
+    'qwen-vl-max-latest',
+    'qwen1.5-14b-chat',
+    'qwen3.5-27b',
+    'deepseek-r1',
+    'qvq-plus-latest',
+    'qwen3-vl-flash',
+    'qwen2.5-32b-instruct',
+    'qwen-turbo-latest',
+    'MiniMax-M2.5',
+    'qwen3-max-2025-09-23',
+    'qwen-flash',
+    'kimi-k2.5'
+  ];
+
+  const uniqueModels = [...new Set(supportedModels)];
+  provider.models = uniqueModels.map(buildTargetModel);
 
   writeJson(path, data);
-  console.log(`[sync-env-models] Updated ${path}`);
+  console.log(`[sync-env-models] Updated ${path} with ${uniqueModels.length} models`);
 }
 
 function syncAuthProfiles() {
