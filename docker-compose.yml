@@ -1,0 +1,29 @@
+services:
+  openclaw:
+    image: ghcr.nju.edu.cn/openclaw/openclaw:latest
+    container_name: openclaw_bot
+    restart: unless-stopped
+    ports:
+      - "18789:18789"
+      - "18791:18791"
+      - "8080:8080"
+    volumes:
+      - ./data/memory:/app/data/memory    # 核心记忆库文件
+      - ./data/config:/app/config         # 配置文件挂载
+      - ./data/skills:/app/skills         # 自定义插件
+      - ./scripts:/app/scripts            # 启动自修复脚本
+      - ./data/openclaw_state:/home/node/.openclaw # 持久化 OpenClaw 内部配置状态
+    env_file:
+      - .env
+    environment:
+      - OPENCLAW_GATEWAY_BIND=lan
+      - HOST=0.0.0.0
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - OPENCLAW_DEFAULT_MODEL=bailian/qwen3-max
+    command: ["sh", "-lc", "node /app/scripts/sync-env-models.mjs && exec docker-entrypoint.sh node openclaw.mjs gateway --allow-unconfigured"]
+    # Uncomment to allow connection to local Ollama on host
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+
+volumes:
+  openclaw_data:

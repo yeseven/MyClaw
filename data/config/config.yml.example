@@ -1,0 +1,23 @@
+# OpenClaw 默认配置文件 (config.yml)
+
+# 基础设置
+name: "MyOpenClaw"
+timezone: "Asia/Shanghai"
+
+# 数据库/存储设置 (Memory)
+storage:
+  type: "markdown"
+  path: "/app/data/memory"
+
+# 默认推理配置
+reasoning:
+  default_provider: "ollama"
+  # provider_configs:
+  #   ollama:
+  #     base_url: "http://host.docker.internal:11434"
+  #     model: "llama3"
+
+# 日志级别
+logging:
+  level: "info"
+  format: "text"

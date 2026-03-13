@@ -1,0 +1,23 @@
+# =========================
+# MyClaw - Git Ignore Rules
+# =========================
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Runtime config/state (contains sessions, tokens, device pairing, etc.)
+data/openclaw_state/
+data/memory/
+data/ollama/
+
+# Local runtime config
+data/config/config.yml
+
+# Logs / OS
+*.log
+.DS_Store
+
+# Editor
+.vscode/
