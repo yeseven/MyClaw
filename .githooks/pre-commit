@@ -1,0 +1,53 @@
+#!/bin/bash
+# =========================================================================
+# MyClaw 提交流程安全钩子 (Pre-commit Hook)
+# 作用: 在每次你敲下 `git commit` 时运行。如果你尝试提交包含敏感信息的代码，
+# 它会强制终止你的提交，并告诉你哪个文件出了问题以防止资产泄露给 GitHub。
+# =========================================================================
+
+echo "🔍 [MyClaw Pre-Commit] 正在对代码进行安全脱敏审查..."
+
+# 正则匹配规则：我们要拦截哪些长得像密钥的东西？
+# 1. sk-开头且大于20位的密钥 (如 OpenAI, 百炼, 火山)
+# 2. cli_开头且大于15位的应用ID (如 飞书)
+# 注意：排除包含 `<YOUR_` 的安全占位符
+FORBIDDEN_PATTERN="(sk-[a-zA-Z0-9]{20,}|cli_[a-zA-Z0-9]{15,})"
+SAFE_PATTERN="YOUR_"
+
+# 获取所有处于暂存区（即将被 Commit）且非删除状态的文件
+FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$FILES" ]; then
+    exit 0
+fi
+
+# 检查这些文件中是否有违规的正则
+VIOLATION=0
+
+for FILE in $FILES; do
+    # 使用 git diff 检查新增/修改的具体内容中是否命中黑名单
+    MATCHES=$(git diff --cached -E -i -G"$FORBIDDEN_PATTERN" -- "$FILE")
+    
+    if [ ! -z "$MATCHES" ]; then
+        # 进一步检查是不是我们刚刚自己写的那些 <YOUR_xxx_KEY> 所谓的占位安全字符
+        IS_SAFE=$(git diff --cached -- "$FILE" | grep -E "^\+" | grep -E "$FORBIDDEN_PATTERN" | grep -v "$SAFE_PATTERN")
+        
+        if [ ! -z "$IS_SAFE" ]; then
+            echo "🚨 [警告] 在即将提交的文件中发现了潜在隐私密钥: $FILE"
+            VIOLATION=1
+        fi
+    fi
+done
+
+if [ $VIOLATION -eq 1 ]; then
+    echo "====================================================================="
+    echo "❌ 审查不通过 (Commit Rejected) :"
+    echo "您的代码中包含了类似于 API Key (sk-...) 或 凭证 (cli_...) 的机密信息！"
+    echo "为了避免泄漏，Git 已自动拦截了您的本次提交请求。"
+    echo "👉 解决办法：请进入上述报错文件，将密文改为占位符 (例如 <YOUR_API_KEY>)。"
+    echo "====================================================================="
+    exit 1
+fi
+
+echo "✅ 审查通过，未发现明文密钥！"
+exit 0
